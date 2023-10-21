@@ -1,13 +1,16 @@
-import { Fragment, useState, useEffect } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
+import { Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import Spinner from "./Spinner";
 import useReserva from "../hooks/useReserva";
 
-const Modal = ({ children, title, texto, modal, handleModal }) => {
+const ModalForm = ({ children, title, handleModalForm, handleSubmit }) => {
 
-    
+    const { modalForm, cargando } = useReserva()
+
   return (
-    <Transition.Root show={ modal } as={Fragment}>
-        <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" onClose={handleModal }>
+
+    <Transition.Root show={ modalForm } as={Fragment}>
+        <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" onClose={handleModalForm}>
             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <Transition.Child
                     as={Fragment}
@@ -44,7 +47,7 @@ const Modal = ({ children, title, texto, modal, handleModal }) => {
                             <button
                                 type="button"
                                 className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                onClick={handleModal}
+                                onClick={ handleModalForm }
                             >
                             <span className="sr-only">Cerrar</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
@@ -52,27 +55,52 @@ const Modal = ({ children, title, texto, modal, handleModal }) => {
                                 </svg>
                             </button>
                         </div>
-                        
+
 
                         <div className="sm:flex sm:items-start">
                             <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                                 <Dialog.Title as="h3" className="text-lg leading-6 font-bold text-gray-900">
-                                    { title }
+                                  {title}
                                 </Dialog.Title>
-                                <p className="max-w-2xl mt-1 text-sm text-gray-500 pb-5">
-                                    { texto }
-                                </p>
-                               
+
+                            
+                                <form 
+                                    onSubmit={handleSubmit}
+                                    className="space-y-8 divide-y divide-gray-200"
+                                    noValidate
+                                >
+                                    <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 py-2">
+                                       { children }
+                                    </div>
+
+                                    <div className="flex pt-5">
+                                        <button
+                                            type="button"
+                                            onClick={handleModalForm}
+                                            className="w-full bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={cargando && true}
+                                            className="disabled:opacity-50 disabled:bg-green-600 disabled:cursor-not-allowed w-full ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                        >
+                                            { cargando ? <Spinner /> : <span>Guardar</span> }
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-
-                        { children }
+                        
                     </div>
                 </Transition.Child>
             </div>
         </Dialog>
     </Transition.Root>
-  )
-}
 
-export default Modal
+  );
+};
+
+export default ModalForm;
+

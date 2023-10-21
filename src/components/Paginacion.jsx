@@ -1,41 +1,36 @@
-import React from 'react'
+import { useEffect, useState } from 'react'
+import useReserva from '../hooks/useReserva';
 
-const Paginacion = ({paginator, setPagina, pagina}) => {
+const Paginacion = () => {
+
+    const { pagina, paginator, handlePagina } = useReserva()
 
     const { number, total_pages, has_previous, has_next, paginate_by, total_results, start_index, end_index } = paginator;
 
+
     const nextPage = () => {
         if ( total_pages > pagina) {
-            setPagina(pagina + 1)
+            handlePagina(pagina + 1)
         }
     }
 
     const prevPage = () => {
         if ( 1 < pagina) {
-            setPagina(pagina - 1)
+            handlePagina(pagina - 1)
         }
     }
+
+     const pagesToShow = 3;
+    let startPage = Math.max(1, pagina - 1);
+    let endPage = Math.min(total_pages, startPage + pagesToShow - 1);
     
-   // Calcula el rango de páginas a mostrar (por ejemplo, 3 páginas)
-//    const pagesToShow = 3;
-//    let pageRange = Math.min(total_pages, pagesToShow);
-//    if (pagina + pageRange > total_pages) {
-//      pageRange = total_pages - pagina + 1;
-//    }
-//    const pages = Array.from({ length: pageRange }, (_, i) => pagina + i);
+    if (endPage - startPage + 1 < pagesToShow) {
+        startPage = Math.max(1, endPage - pagesToShow + 1);
+    }
+    
+    const pages = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
 
-// Calcula el rango de páginas a mostrar (exactamente 3 páginas)
-const pagesToShow = 3;
-let startPage = pagina;
-let endPage = pagina + 2;
-
-if (endPage > total_pages) {
-  endPage = total_pages;
-  startPage = endPage - (pagesToShow - 1);
-}
-
-const pages = Array.from({ length: pagesToShow }, (_, i) => startPage + i);
-
+    
 
   return (
     <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
@@ -68,22 +63,11 @@ const pages = Array.from({ length: pagesToShow }, (_, i) => startPage + i);
                         </button>
                     )}
 
-                    {/* {Array.from(Array(total_pages).keys()).map(position => (
-                        <button 
-                            key={position + 1}
-                            onClick={() => {
-                                setPagina(position + 1)
-                            }} 
-                            className={ position + 1 === page ? 'relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600' : 'relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'  }>
-                            {position + 1}
-                        </button>
-                    )) } */}
-
-                    {pages.map((pageNumber) => (
+                    { total_pages > 1 && pages.map((pageNumber) => (
                             <button
                                 key={pageNumber}
                                 onClick={() => {
-                                    setPagina(pageNumber);
+                                    handlePagina(pageNumber);
                                 }}
                                 className={
                                     pageNumber === pagina

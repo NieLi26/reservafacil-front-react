@@ -12,14 +12,14 @@ import IconoTarifa from '../img/tarifa-icon.svg'
 
 const SIDEBAR_LINKS = [
     { nombre: "Dashboard", icono: IconoDashboard, link: "/reserva" },
-    { nombre: "Citas", icono: IconoCita, link: "/reserva/cita" },
-    { nombre: "Categorias", icono: IconoCategoria, link: "/reserva/categoria" },
-    { nombre: "Especialidades", icono: IconoEspecialidad, link: "/reserva/especialidad" },
-    { nombre: "Tarifas", icono: IconoTarifa, link: "/reserva/tarifa" },
-    { nombre: "Pagos", icono: IconoPago, link: "/reserva/pago" },
-    { nombre: "Horarios", icono: IconoHorario, link: "/reserva/horario" },
-    { nombre: "Clientes", icono: IconoCliente, link: "/reserva/cliente" },
-    { nombre: "Especialistas", icono: IconoEspecialista, link: "/reserva/especialista" }
+    { nombre: "Citas", icono: IconoCita, link: "/reserva/citas" },
+    { nombre: "Categorias", icono: IconoCategoria, link: "/reserva/categorias" },
+    { nombre: "Especialidades", icono: IconoEspecialidad, link: "/reserva/especialidades" },
+    { nombre: "Tarifas", icono: IconoTarifa, link: "/reserva/tarifas" },
+    { nombre: "Pagos", icono: IconoPago, link: "/reserva/pagos" },
+    { nombre: "Horarios", icono: IconoHorario, link: "/reserva/horarios" },
+    { nombre: "Clientes", icono: IconoCliente, link: "/reserva/clientes" },
+    { nombre: "Especialistas", icono: IconoEspecialista, link: "/reserva/especialistas" }
 ]
 
 const ReservaLayout = () => {
@@ -27,7 +27,7 @@ const ReservaLayout = () => {
 
   return (
     <>
-     <ToastContainer />
+      <ToastContainer />
       <div className="min-h-[640px] bg-gray-100">
         <div>
           <div className="fixed inset-0 flex z-40 md:hidden" aria-modal="true">

@@ -10,19 +10,14 @@ import DatePicker from "react-datepicker";
 import { format } from 'date-fns';
 
 import Tabla from "../components/Tabla";
-import TablaBody from "../components/TablaBody";
 import ResultadoVacio from "../components/ResultadoVacio";
 import Paginacion from "../components/Paginacion";
-import Modal from "../components/Modal";
+import ModalForm from "../components/ModalForm";
+import ModalEliminar from "../components/ModalEliminar";
 
+import useReserva from "../hooks/useReserva";
 
-const Tarifa = () => {
-
-    const tablaHeader = [
-        'Numero',
-        'Valor',
-        'Fecha',
-    ]
+const Tarifas = () => {
 
     // const [csrfToken, setCsrfToken] = useState('');
 
@@ -41,84 +36,158 @@ const Tarifa = () => {
     //     getcsrftoken();
     // }, []);
 
-    const [isOpen, setIsOpen] = useState(false);
+    const { 
+            handleModalForm, handleModalEliminar, paginator, pagina, setCargando,
+            handlePaginator, handlePagina, filterOrden, setFilterOrden, filterFecha,filterSearch, setFilterSearch, handleClickFilterReset,
+            startDate, endDate, setDateRange, dropDown, setDropDown
+        } = useReserva();
+
 
     const [ tarifas, setTarifas ] = useState([]);
-    const [ paginator, setPaginator ] = useState({});
-    const [ pagina, setPagina ] = useState(1);
+    const [ tarifa, setTarifa ] = useState({});
 
     // form
     const [ valor, setValor ] = useState(0);
+    const [ id, setId ] = useState('');
 
     const handleSubmit = async e => {
         e.preventDefault();
+
+        if ( valor === '' ) {
+            toast.warning('Valor no puede estar vacio')
+            return
+        }
+
+        if ( valor <= 0 ) {
+            toast.warning('Valor debe ser mayor a 0')
+            return
+        }
+
+        setCargando(true)
+        // await submitTarifa({id, valor})
+        if ( tarifa?.id ) {
+            await editarTarifa({id, valor});
+        } else {
+            await crearTarifa({id, valor});
+        }
+        
+        // handleClickFilterReset();
+        
+        setCargando(false)
+    }
+
+    const limpiarCampos = () => {
+        setValor(0)
+    }
+
+
+    const crearTarifa = async tarifa => {
+        // TODO: crear cliente axios
         const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/tarifas`;
+        console.log(tarifa, 'CREATE');
         try {
-            const { data } = await axios.post(url, {valor})
+            const { data } = await axios.post(url, tarifa)
             console.log(data);
-            handleClickFilterReset();
+            obtenerTarifas()
+            // setTarifas([...tarifas, data])
             toast.success('Tarea Creada Correctamente')
-            setIsOpen(false)
-            setValor('')
+            handleModalFormTarifa()
+            setTarifa({})
+            limpiarCampos()
+        } catch (error) {
+            // console.log(error.response.data);
+            if (Array.isArray(error.response.data.msg)) {
+                for ( const msg of error.response.data.msg ) {
+                    toast.error(msg)
+                }
+                return
+            } 
+            toast.error(error.response.data.msg)
+        }
+    }
+
+    const editarTarifa = async tarifa => {
+        // TODO: crear cliente axios
+        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/tarifas/${tarifa.id}`;
+        console.log(tarifa, 'UPDATE');
+        try {
+            const { data } = await axios.put(url, tarifa)
+            const tarifasActualizadas = tarifas.map(tarifaState => tarifaState.id === data.id ? data : tarifaState)
+            setTarifas(tarifasActualizadas);
+            toast.success('Tarea Actualizada Correctamente')
+            handleModalFormTarifa()
+            setTarifa({})
+            limpiarCampos()
+        } catch (error) {
+            // console.log(error.response.data);
+            if (Array.isArray(error.response.data.msg)) {
+                console.log('ES UNA ARRAY');
+                for ( const msg of error.response.data.msg ) {
+                    toast.error(msg)
+                }
+                return
+            } 
+            toast.error(error.response.data.msg)
+        }
+    }
+
+    const eliminarTarifa = async id => {
+        // TODO: crear cliente axios
+        setCargando(true)
+        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/tarifas/${id}`;
+        try {
+            const { data } = await axios.delete(url)
+            // const tarifasActualizadas = tarifas.filter( tarifaState => tarifaState.id !==  id)
+            // setTarifas(tarifasActualizadas)
+            obtenerTarifas()
+            handleModalEliminar()
+            setTarifa({})
+            toast.success(data.msg)
         } catch (error) {
             console.log(error.response.data);
-            toast.error(error.response.data)
+            toast.error(error.response.data.msg)
+        }
+
+        setCargando(false)
+    }
+
+    const obtenerTarifas = async () => {
+        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/tarifas?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`;
+        console.log(url);
+        try {
+            const { data } = await axios(url)
+            setTarifas(data.results)
+            console.log(data.results);
+            const { results, ...copiaPaginator } = data;
+            handlePaginator(copiaPaginator)
+            // console.log(data.data);
+        } catch (error) {
+            console.log(error);
+            console.log(error.response.data);
         }
     }
 
-    // ###### FILTROS ######
-    // Orden
-    const [ filterOrden, setFilterOrden ] = useState('asc');
-    const [ dropDown, setDropDown ] = useState(false);
-    // Fecha
-    const [dateRange, setDateRange] = useState([null, null]);
-    const [startDate, endDate] = dateRange;
-    const [filterFecha, setFilterFecha] = useState('')
-    // Q
-    const [filterSearch, setFilterSearch] = useState('')
-
-    // Reset
-    const handleClickFilterReset = () => {
-        setPagina(1);
-        setFilterOrden('asc');
-        setDropDown(false);
-        setDateRange([null, null])
-        setFilterSearch('')
+    const handleModalFormTarifa = () => {
+        handleModalForm()
+        setTarifa({})
     }
 
-
+    // rellenar datos de formulario
     useEffect(() => {
-        setDropDown(false);
-    }, [filterOrden])
-
-    useEffect(() => {
-        if (startDate && endDate) {
-            const formatFecha = `${format(startDate, 'yyyy-MM-dd')} a ${format(endDate, 'yyyy-MM-dd')}`
-            console.log(formatFecha);
-            setFilterFecha(formatFecha)
-        } else {
-            setFilterFecha('')
+        if ( tarifa?.id ) {
+            setValor(tarifa.valor)
+            setId(tarifa.id)
+            return
         }
-    }, [startDate, endDate])
+
+        setValor(0)
+        setId('')
+
+    }, [tarifa])
+
 
     useEffect(() => {
-
-        const cargarTarifas = async () => {
-            const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/tarifas?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`;
-            console.log(url);
-            try {
-                const { data } = await axios(url)
-                setTarifas(data.results)
-                console.log(data.results);
-                const { results, ...copiaPaginator } = data;
-                setPaginator(copiaPaginator)
-                // console.log(data.data);
-            } catch (error) {
-                console.log(error);
-                console.log(error.response.data);
-            }
-        }
-        cargarTarifas();
+        obtenerTarifas();
     }, [pagina, filterOrden, filterFecha, filterSearch])
 
   return (
@@ -130,72 +199,49 @@ const Tarifa = () => {
             </div>
             <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
                 <button 
-                    onClick={() => setIsOpen(true)}
+                    onClick={handleModalFormTarifa}
                     className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto">Agregar</button>
             </div>
         </div>
  
   
-        <Modal
-            isOpen={isOpen}
-            setIsOpen={setIsOpen}
-            title="Crear Tarifa"
+        <ModalForm
+            // modalForm={modalForm}
+            handleSubmit={handleSubmit}
+            handleModalForm={handleModalFormTarifa}
+            title={id ? 'Modificar Tarifa' : 'Crear Tarifa'}
         >
         {/* { msg && <Alerta alerta={alerta} /> } */}
 
-            <form 
-                onSubmit={handleSubmit}
-                className="space-y-8 divide-y divide-gray-200"
-            >
-                <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 py-2">
-                <div className="sm:col-span-6">
-                    <label
-                    htmlFor="valor"
-                    className="block text-sm font-medium text-gray-700"
-                    >
-                    {" "}
-                    Valor{" "}
-                    </label>
-                    <div className="mt-1">
-                    <input
-                        type="number"
-                        name="valor"
-                        id="valor"
-                        value={valor}
-                        onChange={e => setValor(e.target.value)}
-                        className="px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    />
-                    </div>
+            <div className="sm:col-span-6">
+                <label
+                htmlFor="valor"
+                className="block text-sm font-medium text-gray-700"
+                >
+                {" "}
+                Valor{" "}
+                </label>
+                
+                <div className="mt-1">
+                <input
+                    type="number"
+                    name="valor"
+                    id="valor"
+                    value={valor}
+                    onChange={e => setValor(e.target.value)}
+                    className="px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                />
                 </div>
-                </div>
+            </div>
+        </ModalForm>
 
-                <div className="flex pt-5">
-                    <button
-                    type="button"
-                    onClick={() => setIsOpen(false)}
-                    className="w-full bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                    Cancelar
-                    </button>
-                    <button
-                    type="submit"
-                    className="w-full ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                    >
-                    <div
-                        id="spinner"
-                        className="hidden spinner w-[20px] h-[20px]"
-                    >
-                        <div className="rect1"></div>
-                        <div className="rect2"></div>
-                        <div className="rect3"></div>
-                        <div className="rect4"></div>
-                        <div className="rect5"></div>
-                    </div>
-                    <span>Guardar</span>
-                    </button>
-                </div>
-            </form>
-        </Modal>
+        <ModalEliminar
+            handleEliminar={eliminarTarifa}
+            id={tarifa.id}
+            title="Eliminar Tarifa"
+            texto="Una tarifa eliminada no se podra recuperar"
+        >
+        </ModalEliminar>
 
         {/* <!-- <input id="vanilla-calendar" type="text"> --> */}
         <div className="mt-4 flex flex-col">
@@ -251,32 +297,32 @@ const Tarifa = () => {
                                     <div className="border-t border-gray-200 px-4 py-6">
                                         {/* <!-- Search --> */}
                                         <div className="relative flex-1">
-                                        <label htmlFor="search-tarifa" className="sr-only"> Buscar </label>
-                                    
-                                        <input
-                                        type="text"
-                                        id="search-tarifa"
-                                        placeholder="Busqueda por..."
-                                        className="w-full rounded-md border-gray-200 px-4 py-2 shadow-sm sm:text-sm"
-                                        />
-                                    
-                                        <span className="absolute inset-y-0 end-0 grid w-10 place-content-center">
-                                        <button disabled type="button" className="text-gray-600 hover:text-gray-700">
-                                            <span className="sr-only">Search</span>
-                                    
-                                            <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                            className="h-4 w-4"
-                                            >
-                                            <path
-                                                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                                            <label htmlFor="search-tarifa" className="sr-only"> Buscar </label>
+                                        
+                                            <input
+                                            type="text"
+                                            id="search-tarifa"
+                                            placeholder="Busqueda por..."
+                                            className="w-full rounded-md border-gray-200 px-4 py-2 shadow-sm sm:text-sm"
                                             />
-                                            </svg>
-                                        </button>
-                                        </span>
+                                    
+                                            <span className="absolute inset-y-0 end-0 grid w-10 place-content-center">
+                                                <button disabled type="button" className="text-gray-600 hover:text-gray-700">
+                                                    <span className="sr-only">Search</span>
+                                            
+                                                    <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    className="h-4 w-4"
+                                                    >
+                                                    <path
+                                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                                                    />
+                                                    </svg>
+                                                </button>
+                                            </span>
                                         </div>
                                     </div>
                                 </form>
@@ -284,10 +330,7 @@ const Tarifa = () => {
                             </div>
                         
                             <div className="max-w-3xl mx-auto px-4 text-center sm:px-6 lg:max-w-full lg:px-8">
-                            {/* <!-- <div className="py-24">
-                                <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">New Arrivals</h1>
-                                <p className="mt-4 max-w-3xl mx-auto text-base text-gray-500">Thoughtfully designed objects for the workspace, home, and travel.</p>
-                            </div> --> */}
+                         
                         
                             <section aria-labelledby="filter-heading" className="border-t border-gray-200 py-6">
                                 <h2 id="filter-heading" className="sr-only">Product filters</h2>
@@ -319,17 +362,7 @@ const Tarifa = () => {
                                         </svg>
                                         </button>
                                     </div>
-                            
-                                    {/* <!--
-                                        Dropdown menu, show/hide based on menu state.
-                            
-                                        Entering: "transition ease-out duration-100"
-                                        From: "transform opacity-0 scale-95"
-                                        To: "transform opacity-100 scale-100"
-                                        Leaving: "transition ease-in duration-75"
-                                        From: "transform opacity-100 scale-100"
-                                        To: "transform opacity-0 scale-95"
-                                    --> */}
+
                                     { dropDown && (
                                         <div className="origin-top-left absolute left-0 z-10 mt-2 w-40 rounded-md shadow-2xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="mobile-menu-button" tabIndex="-1">
                                             <div className="py-1" role="none">
@@ -453,19 +486,27 @@ const Tarifa = () => {
                         </div>
                       
                         <Tabla
-                            tablaHeader={tablaHeader}
+                            tablaHeader={[
+                                'Numero',
+                                'Valor',
+                                'Fecha',
+                            ]}
                         >
-                              { tarifas.length !== 0 && tarifas.map( tarifa => (
+                              { tarifas?.length !== 0 && tarifas.map( item => (
                                     <tr
-                                        key={tarifa.id}
+                                        key={item.id}
                                     >
-                                        <TablaBody 
-                                            tarifa={tarifa}
-                                        />
+                                        <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.id}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.valor}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.fecha}</td>
                                         <td className="relative whitespace-nowrap py-2 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
                                             <button
-                                            //   x-on:click="modalCreate.cargarTarifa(25)"
-                                            className="text-yellow-600 hover:text-yellow-900"
+                                                //   x-on:click="modalCreate.cargarTarifa(25)"
+                                                onClick={() => {
+                                                    handleModalFormTarifa()
+                                                    setTarifa({valor: item.valor, id:item.id})
+                                                }}
+                                                className="text-yellow-600 hover:text-yellow-900"
                                             >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -479,9 +520,15 @@ const Tarifa = () => {
                                                 ></path>
                                             </svg>
                                             </button>
+                                            
                                             <button
-                                            //   x-on:click="modalDelete.openModal(25)"
-                                            className="text-red-600 hover:text-red-900"
+                                                //   x-on:click="modalDelete.openModal(25)"
+                                                onClick={() => {
+                                                    setTarifa({id:item.id})
+                                                    handleModalEliminar()
+                                                }}
+                                                // onClick={() => eliminarTarifa(t.id)}
+                                                className="text-red-600 hover:text-red-900"
                                             >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -506,7 +553,7 @@ const Tarifa = () => {
                         ) : (
                             <Paginacion 
                                 paginator={paginator}
-                                setPagina={setPagina}
+                                handlePagina={handlePagina}
                                 pagina={pagina}
                             />
                         )}
@@ -520,6 +567,6 @@ const Tarifa = () => {
   )
 }
 
-export default Tarifa
+export default Tarifas
 
 
