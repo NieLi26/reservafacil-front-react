@@ -5,7 +5,6 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { Menu } from '@headlessui/react'
 
-import axios from 'axios';
 
 import DatePicker from "react-datepicker";
 
@@ -14,6 +13,7 @@ import ResultadoVacio from "../components/ResultadoVacio";
 import Paginacion from "../components/Paginacion";
 
 import useReserva from "../hooks/useReserva";
+import clienteAxios from "../config/clienteAxios";
 
 
 const METODOS = {
@@ -41,24 +41,6 @@ const METODOS = {
 
 
 const Pagos = () => {
-
-
-    // const [csrfToken, setCsrfToken] = useState('');
-
-    // useEffect(() => {
-    //     // Realiza la solicitud GET para obtener el token CSRF una sola vez
-    //     const getcsrftoken = async () => {
-    //         const url = `${import.meta.env.VITE_BACKEND_URL}/v2/get-csrf-token`;
-    //         try {
-    //             const { data } = await axios(url)
-    //             console.log(data);
-    //             setCsrfToken(data.csrf_token)
-    //         } catch (error) {
-    //             console.log(error.response);
-    //         }
-    //     }
-    //     getcsrftoken();
-    // }, []);
 
     const { 
             handleModalForm, handleModalEliminar, paginator, pagina,
@@ -105,9 +87,18 @@ const Pagos = () => {
 
 
     const obtenerPagos = async () => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/pagos?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}&metodo=${filterMetodo}`;
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const  config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         try {
-            const { data } = await axios(url)
+            const { data } = await clienteAxios(`/v2/booking/pagos?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}&metodo=${filterMetodo}`, config)
             setPagos(data.results)
             const { results, ...copiaPaginator } = data;
             handlePaginator(copiaPaginator)
@@ -154,9 +145,9 @@ const Pagos = () => {
 
         {/* <!-- <input id="vanilla-calendar" type="text"> --> */}
         <div className="mt-4 flex flex-col">
-            <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div className="-my-2 -mx-4 overflow-x-auto lg:overflow-x-visible sm:-mx-6 lg:-mx-8">
                 <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-                    <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <div className="overflow-x-hidden lg:overflow-x-visible shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                         {/* FIltro */}
                         <div className="bg-white">
                             {/* <!--

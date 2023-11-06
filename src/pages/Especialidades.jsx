@@ -16,6 +16,7 @@ import ModalForm from "../components/ModalForm";
 import ModalEliminar from "../components/ModalEliminar";
 
 import useReserva from "../hooks/useReserva";
+import clienteAxios from "../config/clienteAxios";
 
 
 const Especialidades = () => {
@@ -65,11 +66,18 @@ const Especialidades = () => {
     }
 
     const crearEspecialidad = async especialidad => {
-        // TODO: crear especialidad axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/especialidades`;
-        console.log(especialidad, 'CREATE');
         try {
-            const { data } = await axios.post(url, especialidad)
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
+            const { data } = await clienteAxios.post('/v2/booking/especialidades', especialidad, config)
             console.log(data);
             obtenerEspecialidades()
             // setEspecialidades([...especialidades, data])
@@ -90,11 +98,18 @@ const Especialidades = () => {
     }
 
     const editarEspecialidad = async especialidad => {
-        // TODO: crear especialidad axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/especialidades/${especialidad.id}`;
-        console.log(especialidad, 'UPDATE');
         try {
-            const { data } = await axios.put(url, especialidad)
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
+            const { data } = await clienteAxios.put(`/v2/booking/especialidades/${especialidad.id}`, especialidad, config)
             const especialidadesActualizadas = especialidades.map(especialidadestate => especialidadestate.id === data.id ? data : especialidadestate)
             setEspecialidades(especialidadesActualizadas);
             toast.success('Especialidad Actualizada Correctamente')
@@ -114,12 +129,20 @@ const Especialidades = () => {
     }
 
     const eliminarEspecialidad = async id => {
-        // TODO: crear especialidad axios
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         // TODO: Arreglar cuando queda una especialidad en la paginancion actual y se elimina, no desaparece de la vista, deberia cambiar de paginacion
         setCargando(true)
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/especialidades/${id}`;
         try {
-            const { data } = await axios.delete(url)
+            const { data } = await clienteAxios.delete(`/v2/booking/especialidades/${id}`, config)
             // const especialidadesActualizadas = especialidades.filter( especialidadestate => especialidadestate.id !==  id)
             // setEspecialidades(especialidadesActualizadas)
             obtenerEspecialidades()
@@ -134,9 +157,18 @@ const Especialidades = () => {
     }
 
     const obtenerEspecialidades = async () => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/especialidades?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`;
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         try {
-            const { data } = await axios(url)
+            const { data } = await clienteAxios(`/v2/booking/especialidades?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`, config)
             console.log(data.results);
             setEspecialidades(data.results)
             const { results, ...copiaPaginator } = data;
@@ -168,13 +200,21 @@ const Especialidades = () => {
     // }
 
     const obtenerSelect = async () => {
-        const urlCategorias = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/categorias-listado`;
-        const urlTarifas = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/tarifas-listado`;
-        Promise.all([await axios(urlCategorias), await axios(urlTarifas)])
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
+        Promise.allSettled([await clienteAxios(`/v2/booking/categorias-listado`, config), await clienteAxios(`/v2/booking/tarifas-listado`, config)])
         .then( res => {
             const [ categorias, tarifas ] = res
-            setCategorias(categorias.data)
-            setTarifas(tarifas.data)
+            setCategorias(categorias.value.data)
+            setTarifas(tarifas.value.data)
         })
         .catch(error => {
             console.log(error);
@@ -226,7 +266,7 @@ const Especialidades = () => {
     const filteredTarifas =
       queryTarifa === ''
         ? tarifas
-        : tarifas.filter((tarifa) =>
+        : tarifas?.filter((tarifa) =>
             tarifa.valor
             .toString().startsWith(queryTarifa)
         )
@@ -234,7 +274,7 @@ const Especialidades = () => {
     const filteredCategorias =
       queryCategoria === ''
         ? categorias
-        : categorias.filter((categoria) =>
+        : categorias?.filter((categoria) =>
             categoria.nombre
               .toLowerCase()
               .replace(/\s+/g, '')
@@ -294,12 +334,12 @@ const Especialidades = () => {
                             afterLeave={() => setQueryCategoria('')}
                         >
                             <Combobox.Options className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                            {filteredCategorias.length === 0 && queryCategoria !== '' ? (
+                            {filteredCategorias?.length === 0 && queryCategoria !== '' ? (
                                 <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
                                 Nothing found.
                                 </div>
                             ) : (
-                                filteredCategorias.map((item) => (
+                                filteredCategorias?.map((item) => (
                                 <Combobox.Option
                                     key={item.id}
                                     className={({ active }) =>
@@ -371,12 +411,12 @@ const Especialidades = () => {
                             afterLeave={() => setQueryTarifa('')}
                         >
                             <Combobox.Options className="absolute mt-1 max-h-48 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                            {filteredTarifas.length === 0 && queryTarifa !== '' ? (
+                            {filteredTarifas?.length === 0 && queryTarifa !== '' ? (
                                 <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
                                 Nothing found.
                                 </div>
                             ) : (
-                                filteredTarifas.map((item) => (
+                                filteredTarifas?.map((item) => (
                                 <Combobox.Option
                                     key={item.id}
                                     className={({ active }) =>

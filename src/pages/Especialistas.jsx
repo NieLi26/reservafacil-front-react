@@ -6,17 +6,34 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import axios from 'axios';
 
+
+
 import DatePicker from "react-datepicker";
 
+import Spinner from "../components/Spinner";
 import Tabla from "../components/Tabla";
 import ResultadoVacio from "../components/ResultadoVacio";
 import Paginacion from "../components/Paginacion";
-import ModalForm from "../components/ModalForm";
+import Modal from "../components/Modal";
 import ModalEliminar from "../components/ModalEliminar";
 
+import PerfilFormStep from "../components/PerfilFormStep";
+import PersonalFormStep from "../components/PersonalFormStep";
+import ContratoFormStep from "../components/ContratoFormStep";
+
 import useReserva from "../hooks/useReserva";
+import clienteAxios from "../config/clienteAxios";
+
+
+const SEXO = {
+    M: 'Masculino',
+    F: 'Femenino',
+    NB: 'No Binario',
+    NO: 'Prefiero no Decirlo'
+}
 
 const Especialistas = () => {
+
 
 
     const { 
@@ -25,43 +42,120 @@ const Especialistas = () => {
             startDate, endDate, setDateRange, dropDown, setDropDown
         } = useReserva();
 
+    const [ modalFormEspecialista, setModalFormEspecialista ] = useState(false);
+
+    const handleModalFormEspecialista = () => {
+        setModalFormEspecialista(!modalFormEspecialista)
+        setStep(1)
+        limpiarCampos()
+    }
+        
+    const [ step, setStep ] = useState(1);
+
+    // Anterior Step
+    const prevStep = () => {
+        setStep(step - 1);
+    }
+
+    // Siguiente Step
+    const nextStep = () => {
+        setStep(step + 1);
+    }
 
     const [ especialistas, setEspecialistas ] = useState([]);
     const [ especialista, setEspecialista ] = useState({});
 
     // form
-    const [ nombre, setNombre ] = useState('');
-    const [ id, setId ] = useState('');
+    // const [ id, setId ] = useState('');
+    const [ objetoEspecialista, setObjetoEspecialista ] = useState({
+        password: '',
+        password2: '',
+        username: '',
+        first_name: '',
+        last_name: '',
+        email: '',
+        telefono: '',
+        direccion: '',
+        nacionalidad: '',
+        rut: '',
+        fecha_nacimiento: '',
+        sexo: '',
+        info: '',
+        inicio_contrato: '',
+        termino_contrato: ''
+    })
+
+
+    const handleObjetoEspecialista = objetoEspecialista => {
+        setObjetoEspecialista(objetoEspecialista)
+    }
+
+    const componentsByStep = {
+        1: <PerfilFormStep nextStep={nextStep} objetoEspecialista={objetoEspecialista} handleObjetoEspecialista={handleObjetoEspecialista} handleModalFormEspecialista={handleModalFormEspecialista} />,
+        2: <PersonalFormStep prevStep={prevStep} nextStep={nextStep} objetoEspecialista={objetoEspecialista} handleObjetoEspecialista={handleObjetoEspecialista} />,
+        3: <ContratoFormStep prevStep={prevStep} objetoEspecialista={objetoEspecialista} handleObjetoEspecialista={handleObjetoEspecialista} />,
+        // 4: { component: <Success prop7="valor7" prop8="valor8" /> },
+    };
+
+    const nameStep = {
+        1: 'Perfil',
+        2: 'Informacion Personal',
+        3: 'Contrato'
+    }
+      
 
     const handleSubmit = async e => {
         e.preventDefault();
 
-        if ( nombre === '' ) {
-            toast.warning('nombre no puede estar vacio')
+        if ( Object.values(objetoEspecialista).includes('') ) {
+            toast.warning('Todos los campos son obligatorios')
             return
         }
 
         setCargando(true)
         // await submitespecialista({id, nombre})
         if ( especialista?.id ) {
-            await editarEspecialista({id, nombre});
+            await editarEspecialista(objetoEspecialista);
         } else {
-            await crearEspecialista({id, nombre});
+            await crearEspecialista(objetoEspecialista);
         }
         // handleClickFilterReset();
         setCargando(false)
     }
 
     const limpiarCampos = () => {
-        setNombre('')
+        setObjetoEspecialista({
+            password: '',
+            username: '',
+            password2: '',
+            first_name: '',
+            last_name: '',
+            email: '',
+            telefono: '',
+            direccion: '',
+            nacionalidad: '',
+            rut: '',
+            fecha_nacimiento: '',
+            sexo: '',
+            info: '',
+            inicio_contrato: '',
+            termino_contrato: ''
+        })
     }
 
     const crearEspecialista = async especialista => {
-        // TODO: crear cliente axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/especialistas`;
-        console.log(especialista, 'CREATE');
         try {
-            const { data } = await axios.post(url, especialista)
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+    
+            const { data } = await clienteAxios.post('/v1/accounts/especialistas/', especialista, config)
             console.log(data);
             obtenerEspecialistas()
             // setEspecialistas([...especialistas, data])
@@ -70,7 +164,7 @@ const Especialistas = () => {
             setEspecialista({})
             limpiarCampos()
         } catch (error) {
-            // console.log(error.response.data);
+            console.log(error.response.data);
             if (Array.isArray(error.response.data.msg)) {
                 for ( const msg of error.response.data.msg ) {
                     toast.error(msg)
@@ -82,11 +176,18 @@ const Especialistas = () => {
     }
 
     const editarEspecialista = async especialista => {
-        // TODO: crear cliente axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/especialistas/${especialista.id}`;
-        console.log(especialista, 'UPDATE');
         try {
-            const { data } = await axios.put(url, especialista)
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+    
+            const { data } = await clienteAxios.put(`/v1/accounts/especialistas/${especialista.id}/`, especialista, config)
             const especialistasActualizadas = especialistas.map(especialistastate => especialistastate.id === data.id ? data : especialistastate)
             setEspecialistas(especialistasActualizadas);
             toast.success('especialista Actualizada Correctamente')
@@ -106,12 +207,20 @@ const Especialistas = () => {
     }
 
     const eliminarEspecialista = async id => {
-        // TODO: crear cliente axios
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         // TODO: Arreglar cuando queda una especialista en la paginancion actual y se elimina, no desaparece de la vista, deberia cambiar de paginacion
         setCargando(true)
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/especialistas/${id}`;
         try {
-            const { data } = await axios.delete(url)
+            const { data } = await clienteAxios.delete(`/v1/accounts/especialistas/${id}`, config)
             // const especialistasActualizadas = especialistas.filter( especialistastate => especialistastate.id !==  id)
             // setEspecialistas(especialistasActualizadas)
             obtenerEspecialistas()
@@ -126,9 +235,18 @@ const Especialistas = () => {
     }
 
     const obtenerEspecialistas = async () => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/especialistas?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`;
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         try {
-            const { data } = await axios(url)
+            const { data } = await clienteAxios(`/v1/accounts/especialistas?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`, config)
             setEspecialistas(data.results)
             const { results, ...copiaPaginator } = data;
             handlePaginator(copiaPaginator)
@@ -139,28 +257,41 @@ const Especialistas = () => {
         }
     }
 
-    const handleModalFormEspecialista = () => {
-        handleModalForm()
-        setEspecialista({})
-    }
 
     // rellenar datos de formulario
     useEffect(() => {
         if ( especialista?.id ) {
-            setNombre(especialista.nombre)
-            setId(especialista.id)
+            setObjetoEspecialista({
+                id: especialista.id,
+                username: especialista.username,
+                first_name: especialista.first_name,
+                last_name: especialista.last_name,
+                email: especialista.email,
+                telefono: especialista.telefono,
+                direccion: especialista.direccion,
+                nacionalidad: especialista.nacionalidad,
+                rut: especialista.rut,
+                fecha_nacimiento: especialista.fecha_nacimiento,
+                sexo: especialista.sexo,
+                info: especialista.info,
+                inicio_contrato: especialista.inicio_contrato,
+                termino_contrato:especialista.termino_contrato
+            })
             return
         }
 
-        setNombre('')
-        setId('')
-
+        limpiarCampos()
+        // setId('')
     }, [especialista])
 
 
     useEffect(() => {
         obtenerEspecialistas();
     }, [pagina, filterOrden, filterFecha, filterSearch])
+
+    useEffect(() => {
+        console.log(objetoEspecialista);
+    }, [objetoEspecialista])
 
   return (
       <div className="px-4 sm:px-6 lg:px-8">
@@ -176,34 +307,23 @@ const Especialistas = () => {
             </div>
         </div>
  
-  
-        <ModalForm
-            // modalForm={modalForm}
-            handleSubmit={handleSubmit}
-            handleModalForm={handleModalFormEspecialista}
-            title={id ? 'Modificar especialista' : 'Crear especialista'}
-        >
-        {/* { msg && <Alerta alerta={alerta} /> } */}
 
-            <div className="sm:col-span-6">
-                <label
-                htmlFor="nombre"
-                className="block text-sm font-medium text-gray-700"
-                >
-                {" "}
-                nombre{" "}
-                </label>
-                <div className="mt-1">
-                    <input
-                        type="text"
-                        id="nombre"
-                        value={nombre}
-                        onChange={e => setNombre(e.target.value)}
-                        className="px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    />
-                </div>
-            </div>
-        </ModalForm>
+        <Modal
+            modal={modalFormEspecialista}
+            handleModal={handleModalFormEspecialista}
+            title="Crear Especialista"
+        >
+            <h2 className="text-center bg-blue-200 rounded-full p-2 text-base font-extrabold leading-7 text-blue-900 italic uppercase">{ nameStep[step] }</h2>
+
+            <form 
+                onSubmit={handleSubmit}
+                className="space-y-8 divide-y divide-gray-200"
+                noValidate
+            >
+                { componentsByStep[step] } 
+
+            </form>
+        </Modal>
 
         <ModalEliminar
             handleEliminar={eliminarEspecialista}
@@ -458,8 +578,15 @@ const Especialistas = () => {
                         <Tabla
                             tablaHeader={[
                                 'Numero',
+                                'Usuario',
                                 'Nombre',
-                                'Fecha',
+                                'Telefono',
+                                'Email',
+                                'Direccion',
+                                'Nacionalidad',
+                                'Rut',
+                                'Fecha Nacimiento',
+                                'Sexo',
                             ]}
                         >
                               { especialistas?.length !== 0 && especialistas.map( item => (
@@ -467,15 +594,37 @@ const Especialistas = () => {
                                         key={item.id}
                                     >
                                          <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.id}</td>
-                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.nombre}</td>
-                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.fecha}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.username}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.first_name} {item.last_name}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.telefono}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.email}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.direccion}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.nacionalidad}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.rut}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.fecha_nacimiento}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{SEXO[item.sexo]}</td>
 
                                         <td className="relative whitespace-nowrap py-2 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
                                             <button
                                                 //   x-on:click="modalCreate.cargarespecialista(25)"
                                                 onClick={() => {
                                                     handleModalFormEspecialista()
-                                                    setEspecialista({nombre: item.nombre, id:item.id})
+                                                    setEspecialista({
+                                                        id: item.id,
+                                                        username: item.username,
+                                                        first_name: item.first_name,
+                                                        last_name: item.last_name,
+                                                        email: item.email,
+                                                        telefono: item.telefono,
+                                                        direccion: item.direccion,
+                                                        nacionalidad: item.nacionalidad,
+                                                        rut: item.rut,
+                                                        fecha_nacimiento: item.fecha_nacimiento,
+                                                        sexo: item.sexo,
+                                                        info: item.especialista_profile.info,
+                                                        inicio_contrato: item.especialista_profile.inicio_contrato,
+                                                        termino_contrato: item.especialista_profile.termino_contrato
+                                                    })
                                                 }}
                                                 className="text-yellow-600 hover:text-yellow-900"
                                             >

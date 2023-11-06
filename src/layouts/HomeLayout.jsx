@@ -57,14 +57,14 @@ const HomeLayout = () => {
                 </div>
                 <div className="flex-shrink-0 flex items-center">
                     <img
-                    className="block lg:hidden h-8 w-auto"
-                    src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg"
-                    alt="Workflow"
+                    className="block lg:hidden h-14 w-auto"
+                    src="logo.ico"
+                    alt="logo"
                     />
                     <img
-                    className="hidden lg:block h-8 w-auto"
-                    src="https://tailwindui.com/img/logos/workflow-logo-indigo-600-mark-gray-800-text.svg"
-                    alt="Workflow"
+                    className="hidden lg:block h-14 w-auto"
+                    src="logo.ico"
+                    alt="logo"
                     />
                 </div>
                 <div className="hidden md:ml-6 md:flex md:space-x-8">
@@ -81,10 +81,9 @@ const HomeLayout = () => {
                 </div>
                 <div className="flex items-center">
                 <div className="flex-shrink-0">
-                    <a
-                    href="{% url 'pages:reserva' %}"
-                    target="_blank"
-                    className="cursor-pointer relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    <Link 
+                        to="/agendar"
+                        className="cursor-pointer relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -97,8 +96,8 @@ const HomeLayout = () => {
                         d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"
                         />
                     </svg>
-                    <span>Agendar Cita</span>
-                    </a>
+                    Agendar Cita
+                    </Link>
                 </div>
                 {/* <div className="hidden md:ml-4 md:flex-shrink-0 md:flex md:items-center">
                     <button
@@ -183,20 +182,20 @@ const HomeLayout = () => {
                         className="pt-2 pb-3 space-y-1"
                     >
                         <a
-                        href="{% url 'pages:home' %}"
-                        className="{% if request.resolver_match.url_name == 'home' %} bg-indigo-50 border-indigo-500 text-indigo-700 {% else %} border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 {% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium sm:pl-5 sm:pr-6"
+                            href="{% url 'pages:home' %}"
+                            className="{% if request.resolver_match.url_name == 'home' %} bg-indigo-50 border-indigo-500 text-indigo-700 {% else %} border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 {% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium sm:pl-5 sm:pr-6"
                         >
                         Inicio
                         </a>
                         <a
-                        href="#"
-                        className="{% if request.resolver_match.url_name == '#' %} bg-indigo-50 border-indigo-500 text-indigo-700 {% else %} border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 {% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium sm:pl-5 sm:pr-6"
+                            href="#"
+                            className="{% if request.resolver_match.url_name == '#' %} bg-indigo-50 border-indigo-500 text-indigo-700 {% else %} border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 {% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium sm:pl-5 sm:pr-6"
                         >
                         Sobre Nosotros
                         </a>
                         <a
-                        href="{% url 'pages:contact' %}"
-                        className="{% if request.resolver_match.url_name == 'contact' %} bg-indigo-50 border-indigo-500 text-indigo-700 {% else %} border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 {% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium sm:pl-5 sm:pr-6"
+                            href="{% url 'pages:contact' %}"
+                            className="{% if request.resolver_match.url_name == 'contact' %} bg-indigo-50 border-indigo-500 text-indigo-700 {% else %} border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 {% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium sm:pl-5 sm:pr-6"
                         >
                         Contacto
                         </a>

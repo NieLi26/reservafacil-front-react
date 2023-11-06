@@ -16,26 +16,9 @@ import ModalForm from "../components/ModalForm";
 import ModalEliminar from "../components/ModalEliminar";
 
 import useReserva from "../hooks/useReserva";
+import clienteAxios from "../config/clienteAxios";
 
 const Categorias = () => {
-
-
-    // const [csrfToken, setCsrfToken] = useState('');
-
-    // useEffect(() => {
-    //     // Realiza la solicitud GET para obtener el token CSRF una sola vez
-    //     const getcsrftoken = async () => {
-    //         const url = `${import.meta.env.VITE_BACKEND_URL}/v2/get-csrf-token`;
-    //         try {
-    //             const { data } = await axios(url)
-    //             console.log(data);
-    //             setCsrfToken(data.csrf_token)
-    //         } catch (error) {
-    //             console.log(error.response);
-    //         }
-    //     }
-    //     getcsrftoken();
-    // }, []);
 
     const { 
             handleModalForm, handleModalEliminar, paginator, pagina, setCargando,
@@ -75,11 +58,19 @@ const Categorias = () => {
     }
 
     const crearCategoria = async categoria => {
-        // TODO: crear cliente axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/categorias`;
-        console.log(categoria, 'CREATE');
+
         try {
-            const { data } = await axios.post(url, categoria)
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+            
+            const { data } = await clienteAxios.post('/v2/booking/categorias', categoria, config)
             console.log(data);
             obtenerCategorias()
             // setCategorias([...categorias, data])
@@ -100,11 +91,18 @@ const Categorias = () => {
     }
 
     const editarCategoria = async categoria => {
-        // TODO: crear cliente axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/categorias/${categoria.id}`;
-        console.log(categoria, 'UPDATE');
         try {
-            const { data } = await axios.put(url, categoria)
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
+            const { data } = await clienteAxios.put(`/v2/booking/categorias/${categoria.id}`, categoria, config)
             const categoriasActualizadas = categorias.map(categoriastate => categoriastate.id === data.id ? data : categoriastate)
             setCategorias(categoriasActualizadas);
             toast.success('Categoria Actualizada Correctamente')
@@ -124,12 +122,20 @@ const Categorias = () => {
     }
 
     const eliminarCategoria = async id => {
-        // TODO: crear cliente axios
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         // TODO: Arreglar cuando queda una categoria en la paginancion actual y se elimina, no desaparece de la vista, deberia cambiar de paginacion
         setCargando(true)
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/categorias/${id}`;
         try {
-            const { data } = await axios.delete(url)
+            const { data } = await clienteAxios.delete(`/v2/booking/categorias/${id}`, config)
             // const categoriasActualizadas = categorias.filter( categoriastate => categoriastate.id !==  id)
             // setCategorias(categoriasActualizadas)
             obtenerCategorias()
@@ -144,9 +150,18 @@ const Categorias = () => {
     }
 
     const obtenerCategorias = async () => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/categorias?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`;
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         try {
-            const { data } = await axios(url)
+            const { data } = await clienteAxios(`/v2/booking/categorias?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`, config)
             setCategorias(data.results)
             const { results, ...copiaPaginator } = data;
             handlePaginator(copiaPaginator)

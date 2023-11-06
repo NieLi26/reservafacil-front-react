@@ -1,40 +1,19 @@
 import { useState, useEffect } from "react";
 
-
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import axios from 'axios';
-
 import DatePicker from "react-datepicker";
-import { format } from 'date-fns';
 
 import Tabla from "../components/Tabla";
 import ResultadoVacio from "../components/ResultadoVacio";
 import Paginacion from "../components/Paginacion";
 import ModalForm from "../components/ModalForm";
 import ModalEliminar from "../components/ModalEliminar";
-
+import clienteAxios from "../config/clienteAxios";
 import useReserva from "../hooks/useReserva";
 
 const Tarifas = () => {
-
-    // const [csrfToken, setCsrfToken] = useState('');
-
-    // useEffect(() => {
-    //     // Realiza la solicitud GET para obtener el token CSRF una sola vez
-    //     const getcsrftoken = async () => {
-    //         const url = `${import.meta.env.VITE_BACKEND_URL}/v2/get-csrf-token`;
-    //         try {
-    //             const { data } = await axios(url)
-    //             console.log(data);
-    //             setCsrfToken(data.csrf_token)
-    //         } catch (error) {
-    //             console.log(error.response);
-    //         }
-    //     }
-    //     getcsrftoken();
-    // }, []);
 
     const { 
             handleModalForm, handleModalEliminar, paginator, pagina, setCargando,
@@ -82,11 +61,18 @@ const Tarifas = () => {
 
 
     const crearTarifa = async tarifa => {
-        // TODO: crear cliente axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/tarifas`;
-        console.log(tarifa, 'CREATE');
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const  config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         try {
-            const { data } = await axios.post(url, tarifa)
+            const { data } = await clienteAxios.post('/v2/booking/tarifas', tarifa, config)
             console.log(data);
             obtenerTarifas()
             // setTarifas([...tarifas, data])
@@ -96,6 +82,8 @@ const Tarifas = () => {
             limpiarCampos()
         } catch (error) {
             // console.log(error.response.data);
+            error.response.data.detail && toast.error(error.response.data.detail) 
+
             if (Array.isArray(error.response.data.msg)) {
                 for ( const msg of error.response.data.msg ) {
                     toast.error(msg)
@@ -107,11 +95,19 @@ const Tarifas = () => {
     }
 
     const editarTarifa = async tarifa => {
-        // TODO: crear cliente axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/tarifas/${tarifa.id}`;
-        console.log(tarifa, 'UPDATE');
+
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const  config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         try {
-            const { data } = await axios.put(url, tarifa)
+            const { data } = await clienteAxios.put(`/v2/booking/tarifas/${tarifa.id}`, tarifa, config)
             const tarifasActualizadas = tarifas.map(tarifaState => tarifaState.id === data.id ? data : tarifaState)
             setTarifas(tarifasActualizadas);
             toast.success('Tarea Actualizada Correctamente')
@@ -120,6 +116,8 @@ const Tarifas = () => {
             limpiarCampos()
         } catch (error) {
             // console.log(error.response.data);
+            error.response.data.detail && toast.error(error.response.data.detail) 
+
             if (Array.isArray(error.response.data.msg)) {
                 console.log('ES UNA ARRAY');
                 for ( const msg of error.response.data.msg ) {
@@ -132,11 +130,20 @@ const Tarifas = () => {
     }
 
     const eliminarTarifa = async id => {
-        // TODO: crear cliente axios
+
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const  config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         setCargando(true)
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/tarifas/${id}`;
         try {
-            const { data } = await axios.delete(url)
+            const { data } = await clienteAxios.delete(`v2/booking/tarifas/${id}`, config)
             // const tarifasActualizadas = tarifas.filter( tarifaState => tarifaState.id !==  id)
             // setTarifas(tarifasActualizadas)
             obtenerTarifas()
@@ -144,6 +151,7 @@ const Tarifas = () => {
             setTarifa({})
             toast.success(data.msg)
         } catch (error) {
+            error.response.data.detail && toast.error(error.response.data.detail) 
             console.log(error.response.data);
             toast.error(error.response.data.msg)
         }
@@ -152,16 +160,26 @@ const Tarifas = () => {
     }
 
     const obtenerTarifas = async () => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/tarifas?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`;
-        console.log(url);
+
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const  config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         try {
-            const { data } = await axios(url)
+            const { data } = await clienteAxios(`/v2/booking/tarifas?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`, config)
             setTarifas(data.results)
             console.log(data.results);
             const { results, ...copiaPaginator } = data;
             handlePaginator(copiaPaginator)
             // console.log(data.data);
         } catch (error) {
+            error.response.data.detail && toast.error(error.response.data.detail) 
             console.log(error);
             console.log(error.response.data);
         }

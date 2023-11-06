@@ -1,5 +1,8 @@
-import { Outlet, useLocation, Link } from "react-router-dom";
+import { useState } from "react";
+import { Outlet, useLocation, Link, Navigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
+import useAuth from "../hooks/useAuth";
+
 import IconoCategoria from '../img/categoria-icon.svg'
 import IconoCita from '../img/cita-icon.svg'
 import IconoCliente from '../img/cliente-icon.svg'
@@ -9,6 +12,7 @@ import IconoEspecialidad from '../img/especialidad-icon.svg'
 import IconoHorario from '../img/horario-icon.svg'
 import IconoPago from '../img/pago-icon.svg'
 import IconoTarifa from '../img/tarifa-icon.svg'
+import GlobalSpinner from "../components/GlobalSpinner";
 
 const SIDEBAR_LINKS = [
     { nombre: "Dashboard", icono: IconoDashboard, link: "/reserva" },
@@ -25,253 +29,269 @@ const SIDEBAR_LINKS = [
 const ReservaLayout = () => {
   const location = useLocation();
 
+  const { auth, cargando, cerrarSesionAuth } = useAuth()
+
+  const [ sidebar, setSidebar ] = useState(false)
+  const [ dropdown, setDropdown ] = useState(false)
+
+  const handleClickCerrarSesion = () => {
+    cerrarSesionAuth()
+  }
+
+  // para esperar que se llene le state de auth
+  if (cargando) return <GlobalSpinner />
+
+  if (!auth.id) return <Navigate to={'/login'} />
+
   return (
     <>
       <ToastContainer />
       <div className="min-h-[640px] bg-gray-100">
         <div>
-          <div className="fixed inset-0 flex z-40 md:hidden" aria-modal="true">
-            <div
-              className="fixed inset-0 bg-gray-600 bg-opacity-75"
-              aria-hidden="true"
-            ></div>
+          { sidebar &&  
+            <div className="fixed inset-0 flex z-40 md:hidden" aria-modal="true">
+              <div
+                className="fixed inset-0 bg-gray-600 bg-opacity-75"
+                aria-hidden="true"
+              ></div>
 
-            <div className="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-gray-800">
-              <div className="absolute top-0 right-0 -mr-12 pt-2">
-                <button
-                  type="button"
-                  className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-                >
-                  <span className="sr-only">Close sidebar</span>
-                  <svg
-                    className="h-6 w-6 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
+              <div className="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-gray-800">
+                <div className="absolute top-0 right-0 -mr-12 pt-2">
+                  <button
+                    onClick={() => setSidebar(false)}
+                    type="button"
+                    className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
                   >
-                    <path d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                </button>
-              </div>
-
-              <div className="flex-shrink-0 flex items-center px-4">
-                <img
-                  className="h-8 w-auto"
-                src="/logo.ico"
-                  alt="Workflow"
-                />
-              </div>
-
-              <div className="mt-5 flex-1 h-0 overflow-y-auto">
-                <nav className="px-2 space-y-1">
-                  <a
-                    href="{% url 'booking:dashboard' %}"
-                    className="{% if request.resolver_match.url_name == 'dashboard' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
-                  >
+                    <span className="sr-only">Close sidebar</span>
                     <svg
-                      className="{% if request.resolver_match.url_name == 'dashboard' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
+                      className="h-6 w-6 text-white"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
                       aria-hidden="true"
                     >
-                      <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                      <path d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
-                    Dashboard
-                  </a>
+                  </button>
+                </div>
 
-                  <a
-                    href="{% url 'booking:cita' %}"
-                    className="{% if request.resolver_match.url_name == 'cita' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="{% if request.resolver_match.url_name == 'cita' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      fill="none"
-                    >
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                      <path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12z"></path>
-                      <path d="M19 16h-12a2 2 0 0 0 -2 2"></path>
-                      <path d="M9 8h6"></path>
-                    </svg>
-                    Citas
-                  </a>
+                <div className="flex-shrink-0 flex items-center px-4">
+                  <img
+                    className="h-8 w-auto"
+                  src="/logo.ico"
+                    alt="Workflow"
+                  />
+                </div>
 
-                  {/* {% for group in request.user.groups.all %}
-                        {% if group.name == 'Administrador' %}    */}
-                  <a
-                    href="{% url 'booking:categoria' %}"
-                    className="{% if request.resolver_match.url_name == 'categoria' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="{% if request.resolver_match.url_name == 'categoria' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      fill="none"
+                <div className="mt-5 flex-1 h-0 overflow-y-auto">
+                  <nav className="px-2 space-y-1">
+                    <a
+                      href="{% url 'booking:dashboard' %}"
+                      className="{% if request.resolver_match.url_name == 'dashboard' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
                     >
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                      <path d="M4 4h6v6h-6z"></path>
-                      <path d="M14 4h6v6h-6z"></path>
-                      <path d="M4 14h6v6h-6z"></path>
-                      <path d="M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
-                    </svg>
-                    Categorias
-                  </a>
-                  {/* {% endif %}
-                        {% endfor %} */}
+                      <svg
+                        className="{% if request.resolver_match.url_name == 'dashboard' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                      </svg>
+                      Dashboard
+                    </a>
 
-                  <a
-                    href="{% url 'booking:especialidad' %}"
-                    className="{% if request.resolver_match.url_name == 'especialidad' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="{% if request.resolver_match.url_name == 'especialidad' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      fill="none"
+                    <a
+                      href="{% url 'booking:cita' %}"
+                      className="{% if request.resolver_match.url_name == 'cita' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
                     >
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                      <path d="M12 15m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
-                      <path d="M10 7h4"></path>
-                      <path d="M10 18v4l2 -1l2 1v-4"></path>
-                      <path d="M10 19h-2a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-2"></path>
-                    </svg>
-                    Especialidades
-                  </a>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="{% if request.resolver_match.url_name == 'cita' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        fill="none"
+                      >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12z"></path>
+                        <path d="M19 16h-12a2 2 0 0 0 -2 2"></path>
+                        <path d="M9 8h6"></path>
+                      </svg>
+                      Citas
+                    </a>
 
-                  {/* {% for group in request.user.groups.all %}
-                        {% if group.name == 'Administrador' %}    */}
-                  <a
-                    href="{% url 'booking:tarifa' %}"
-                    className="{% if request.resolver_match.url_name == 'tarifa' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="{% if request.resolver_match.url_name == 'tarifa' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      fill="none"
+                    {/* {% for group in request.user.groups.all %}
+                          {% if group.name == 'Administrador' %}    */}
+                    <a
+                      href="{% url 'booking:categoria' %}"
+                      className="{% if request.resolver_match.url_name == 'categoria' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
                     >
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                      <path d="M16 6m-5 0a5 3 0 1 0 10 0a5 3 0 1 0 -10 0"></path>
-                      <path d="M11 6v4c0 1.657 2.239 3 5 3s5 -1.343 5 -3v-4"></path>
-                      <path d="M11 10v4c0 1.657 2.239 3 5 3s5 -1.343 5 -3v-4"></path>
-                      <path d="M11 14v4c0 1.657 2.239 3 5 3s5 -1.343 5 -3v-4"></path>
-                      <path d="M7 9h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5"></path>
-                      <path d="M5 15v1m0 -8v1"></path>
-                    </svg>
-                    Tarifas
-                  </a>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="{% if request.resolver_match.url_name == 'categoria' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        fill="none"
+                      >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M4 4h6v6h-6z"></path>
+                        <path d="M14 4h6v6h-6z"></path>
+                        <path d="M4 14h6v6h-6z"></path>
+                        <path d="M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
+                      </svg>
+                      Categorias
+                    </a>
+                    {/* {% endif %}
+                          {% endfor %} */}
 
-                  <a
-                    href="{% url 'booking:pago' %}"
-                    className="{% if request.resolver_match.url_name == 'pago' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
-                  >
-                    <svg
-                      className="{% if request.resolver_match.url_name == 'pago' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                    <a
+                      href="{% url 'booking:especialidad' %}"
+                      className="{% if request.resolver_match.url_name == 'especialidad' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
                     >
-                      <path d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                    </svg>
-                    Pagos
-                  </a>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="{% if request.resolver_match.url_name == 'especialidad' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        fill="none"
+                      >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 15m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
+                        <path d="M10 7h4"></path>
+                        <path d="M10 18v4l2 -1l2 1v-4"></path>
+                        <path d="M10 19h-2a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-2"></path>
+                      </svg>
+                      Especialidades
+                    </a>
 
-                  <a
-                    href="{% url 'booking:horario' %}"
-                    className="{% if request.resolver_match.url_name == 'horario' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="{% if request.resolver_match.url_name == 'horario' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      fill="none"
+                    {/* {% for group in request.user.groups.all %}
+                          {% if group.name == 'Administrador' %}    */}
+                    <a
+                      href="{% url 'booking:tarifa' %}"
+                      className="{% if request.resolver_match.url_name == 'tarifa' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
                     >
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                      <path d="M12 13m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
-                      <path d="M12 10l0 3l2 0"></path>
-                      <path d="M7 4l-2.75 2"></path>
-                      <path d="M17 4l2.75 2"></path>
-                    </svg>
-                    Horarios
-                  </a>
-                  {/* {% endif %}
-                        {% endfor %} */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="{% if request.resolver_match.url_name == 'tarifa' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        fill="none"
+                      >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M16 6m-5 0a5 3 0 1 0 10 0a5 3 0 1 0 -10 0"></path>
+                        <path d="M11 6v4c0 1.657 2.239 3 5 3s5 -1.343 5 -3v-4"></path>
+                        <path d="M11 10v4c0 1.657 2.239 3 5 3s5 -1.343 5 -3v-4"></path>
+                        <path d="M11 14v4c0 1.657 2.239 3 5 3s5 -1.343 5 -3v-4"></path>
+                        <path d="M7 9h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5"></path>
+                        <path d="M5 15v1m0 -8v1"></path>
+                      </svg>
+                      Tarifas
+                    </a>
 
-                  <a
-                    href="{% url 'booking:cliente' %}"
-                    className="{% if request.resolver_match.url_name == 'cliente' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="{% if request.resolver_match.url_name == 'cliente' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      fill="none"
+                    <a
+                      href="{% url 'booking:pago' %}"
+                      className="{% if request.resolver_match.url_name == 'pago' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
                     >
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                      <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"></path>
-                      <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
-                    </svg>
-                    Clientes
-                  </a>
+                      <svg
+                        className="{% if request.resolver_match.url_name == 'pago' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                      </svg>
+                      Pagos
+                    </a>
 
-                  {/* {% for group in request.user.groups.all %}
-                        {% if group.name == 'Administrador' %}    */}
-                  <a
-                    href="{% url 'booking:especialista' %}"
-                    className="{% if request.resolver_match.url_name == 'especialista' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="{% if request.resolver_match.url_name == 'especialista' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      fill="none"
+                    <a
+                      href="{% url 'booking:horario' %}"
+                      className="{% if request.resolver_match.url_name == 'horario' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
                     >
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                      <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path>
-                      <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                      <path d="M21 21v-2a4 4 0 0 0 -3 -3.85"></path>
-                    </svg>
-                    Especialistas
-                  </a>
-                  {/* {% endif %}
-                        {% endfor %} */}
-                </nav>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="{% if request.resolver_match.url_name == 'horario' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        fill="none"
+                      >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 13m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
+                        <path d="M12 10l0 3l2 0"></path>
+                        <path d="M7 4l-2.75 2"></path>
+                        <path d="M17 4l2.75 2"></path>
+                      </svg>
+                      Horarios
+                    </a>
+                    {/* {% endif %}
+                          {% endfor %} */}
+
+                    <a
+                      href="{% url 'booking:cliente' %}"
+                      className="{% if request.resolver_match.url_name == 'cliente' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="{% if request.resolver_match.url_name == 'cliente' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        fill="none"
+                      >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"></path>
+                        <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+                      </svg>
+                      Clientes
+                    </a>
+
+                    {/* {% for group in request.user.groups.all %}
+                          {% if group.name == 'Administrador' %}    */}
+                    <a
+                      href="{% url 'booking:especialista' %}"
+                      className="{% if request.resolver_match.url_name == 'especialista' %} bg-gray-900 text-white {% else %} text-gray-300 hover:bg-gray-700 hover:text-white {% endif %} group flex items-center px-2 py-2 text-base font-medium rounded-md"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="{% if request.resolver_match.url_name == 'especialista' %} text-gray-300 {% else %} text-gray-400 group-hover:text-gray-300 {% endif %} mr-4 flex-shrink-0 h-6 w-6"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        fill="none"
+                      >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path>
+                        <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        <path d="M21 21v-2a4 4 0 0 0 -3 -3.85"></path>
+                      </svg>
+                      Especialistas
+                    </a>
+                    {/* {% endif %}
+                          {% endfor %} */}
+                  </nav>
+                </div>
+              </div>
+
+              <div className="flex-shrink-0 w-14" aria-hidden="true">
+                {/* <!-- Dummy element to force sidebar to shrink to fit close icon --> */}
               </div>
             </div>
-
-            <div className="flex-shrink-0 w-14" aria-hidden="true">
-              {/* <!-- Dummy element to force sidebar to shrink to fit close icon --> */}
-            </div>
-          </div>
-
+          }
           {/* <!-- Static sidebar for desktop --> */}
           <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
             {/* <!-- Sidebar component, swap this element with another sidebar if you like --> */}
@@ -308,6 +328,7 @@ const ReservaLayout = () => {
           <div className="md:pl-64 flex flex-col">
             <div className="sticky top-0 z-10 flex-shrink-0 flex h-16 bg-white shadow">
               <button
+                onClick={() => setSidebar(true)}
                 type="button"
                 className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden"
               >
@@ -366,10 +387,11 @@ const ReservaLayout = () => {
                   </button>
 
                   {/* <!-- Profile dropdown --> */}
-                  {/* <div className="ml-3 relative">
+                  <div className="ml-3 relative">
                     <div>
                       <button
                         type="button"
+                        onClick={() => setDropdown(!dropdown)}
                         className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         id="user-menu-button"
                         aria-expanded="false"
@@ -383,41 +405,43 @@ const ReservaLayout = () => {
                         />
                       </button>
                     </div>
-
-                    <div
-                      className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
-                      role="menu"
-                      aria-orientation="vertical"
-                      aria-labelledby="user-menu-button"
-                    >
-                      <a
-                        href="#"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
-                        role="menuitem"
-                        id="user-menu-item-0"
+                    
+                    { dropdown && 
+                      <div
+                        className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+                        role="menu"
+                        aria-orientation="vertical"
+                        aria-labelledby="user-menu-button"
                       >
-                        Your Profile
-                      </a>
+                        <a
+                          href="#"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+                          role="menuitem"
+                          id="user-menu-item-0"
+                        >
+                          Your Profile
+                        </a>
 
-                      <a
-                        href="#"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
-                        role="menuitem"
-                        id="user-menu-item-1"
-                      >
-                        Settings
-                      </a>
+                        <a
+                          href="#"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+                          role="menuitem"
+                          id="user-menu-item-1"
+                        >
+                          Settings
+                        </a>
 
-                      <a
-                        href="{% url 'logout' %}"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
-                        role="menuitem"
-                        id="user-menu-item-2"
-                      >
-                        Logout
-                      </a>
-                    </div>
-                  </div> */}
+                        <button
+                          onClick={handleClickCerrarSesion}
+                          className="w-full text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+                          role="menuitem"
+                          id="user-menu-item-2"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    }
+                  </div>
                 </div>
               </div>
             </div>

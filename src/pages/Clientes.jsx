@@ -17,6 +17,7 @@ import ModalEliminar from "../components/ModalEliminar";
 
 import useReserva from "../hooks/useReserva";
 import { validarEmail, validarRut } from "../helpers/validarCampos";
+import clienteAxios from "../config/clienteAxios";
 
 const SEXO = {
     M: 'Masculino',
@@ -66,7 +67,7 @@ const Clientes = () => {
         }
 
         if ( !validarRut(rut) ) {
-            toast.warning('Formato de Rut Incorrecto, debe ser sin puntos y con guion')
+            toast.warning('Rut Incorrecto, debe ser sin puntos y con guion')
             return
         }
 
@@ -101,11 +102,18 @@ const Clientes = () => {
     }
 
     const crearCliente = async cliente => {
-        // TODO: crear cliente axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/clientes`;
-        console.log(cliente, 'CREATE');
         try {
-            const { data } = await axios.post(url, cliente)
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
+            const { data } = await clienteAxios.post('/v2/booking/clientes', cliente, config)
             console.log(data);
             obtenerClientes()
             // setClientes([...clientes, data])
@@ -126,11 +134,18 @@ const Clientes = () => {
     }
 
     const editarCliente = async cliente => {
-        // TODO: crear cliente axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/clientes/${cliente.id}`;
-        console.log(cliente, 'UPDATE');
         try {
-            const { data } = await axios.put(url, cliente)
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
+            const { data } = await clienteAxios.put(`/v2/booking/clientes/${cliente.id}`, cliente, config)
             const clientesActualizadas = clientes.map(clientestate => clientestate.id === data.id ? data : clientestate)
             setClientes(clientesActualizadas);
             toast.success('Cliente Actualizado Correctamente')
@@ -150,12 +165,20 @@ const Clientes = () => {
     }
 
     const eliminarCliente = async id => {
-        // TODO: crear cliente axios
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         // TODO: Arreglar cuando queda una cliente en la paginancion actual y se elimina, no desaparece de la vista, deberia cambiar de paginacion
         setCargando(true)
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/clientes/${id}`;
         try {
-            const { data } = await axios.delete(url)
+            const { data } = await clienteAxios.delete(`/v2/booking/clientes/${id}`, config)
             // const clientesActualizadas = clientes.filter( clientestate => clientestate.id !==  id)
             // setClientes(clientesActualizadas)
             obtenerClientes()
@@ -170,9 +193,18 @@ const Clientes = () => {
     }
 
     const obtenerClientes = async () => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/clientes?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`;
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         try {
-            const { data } = await axios(url)
+            const { data } = await clienteAxios(`/v2/booking/clientes?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`, config)
             console.log(data.results);
             setClientes(data.results)
             const { results, ...copiaPaginator } = data;

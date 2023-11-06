@@ -17,6 +17,7 @@ import ModalForm from "../components/ModalForm";
 import ModalEliminar from "../components/ModalEliminar";
 
 import useReserva from "../hooks/useReserva";
+import clienteAxios from "../config/clienteAxios";
 
 const DIAS = {
     LU: 'Lunes',
@@ -83,11 +84,18 @@ const Horarios = () => {
     }
 
     const crearHorario = async horario => {
-        // TODO: crear horario axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/horarios`;
-        console.log(horario, 'CREATE');
         try {
-            const { data } = await axios.post(url, horario)
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
+            const { data } = await clienteAxios.post('/v2/booking/horarios', horario, config)
             console.log(data);
             obtenerHorarios()
             // setHorarios([...horarios, data])
@@ -108,11 +116,18 @@ const Horarios = () => {
     }
 
     const editarHorario = async horario => {
-        // TODO: crear horario axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/horarios/${horario.id}`;
-        console.log(horario, 'UPDATE');
         try {
-            const { data } = await axios.put(url, horario)
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
+            const { data } = await clienteAxios.put(`/v2/booking/horarios/${horario.id}`, horario, config)
             const horariosActualizadas = horarios.map(horariostate => horariostate.id === data.id ? data : horariostate)
             setHorarios(horariosActualizadas);
             toast.success('Horario Actualizado Correctamente')
@@ -132,12 +147,20 @@ const Horarios = () => {
     }
 
     const eliminarHorario = async id => {
-        // TODO: crear horario axios
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         // TODO: Arreglar cuando queda una horario en la paginancion actual y se elimina, no desaparece de la vista, deberia cambiar de paginacion
         setCargando(true)
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/horarios/${id}`;
         try {
-            const { data } = await axios.delete(url)
+            const { data } = await clienteAxios.delete(`/v2/booking/horarios/${id}`, config)
             // const horariosActualizadas = horarios.filter( horariostate => horariostate.id !==  id)
             // setHorarios(horariosActualizadas)
             obtenerHorarios()
@@ -152,9 +175,18 @@ const Horarios = () => {
     }
 
     const obtenerHorarios = async () => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/horarios?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`;
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         try {
-            const { data } = await axios(url)
+            const { data } = await clienteAxios(`/v2/booking/horarios?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}`, config)
             console.log(data.results);
             setHorarios(data.results)
             const { results, ...copiaPaginator } = data;
@@ -174,9 +206,18 @@ const Horarios = () => {
 
     useEffect(() => {
         const obtenerEspecialistas = async () => {
-            const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/especialistas-listado`;
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
             try {
-                const { data } = await axios(url)
+                const { data } = await clienteAxios('/v2/booking/especialistasprofile-listado', config)
                 console.log(data);
                 setEspecialistas(data)
             } catch (error) {

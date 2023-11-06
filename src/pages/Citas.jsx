@@ -17,13 +17,10 @@ import Paginacion from "../components/Paginacion";
 import Modal from "../components/Modal";
 
 import useReserva from "../hooks/useReserva";
+import clienteAxios from "../config/clienteAxios";
 
 
 const ESTADOS = {
-    RL: {
-        'nombre': 'Realizada',
-        'color': 'bg-green-500'
-    },
     AN: {
         'nombre': 'Anulada',
         'color': 'bg-red-500'
@@ -177,10 +174,20 @@ const Citas = () => {
 
 
     const obtenerCitas = async () => {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/citas?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}&estado=${filterEstado}&realizada=${filterSituacion}&especialista=${especialista.id || ''}`;
+        const token = JSON.parse(localStorage.getItem('token'))
+        if ( !token ) return;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token.access}`
+            }
+        }
+
         try {
-            const { data } = await axios(url)
+            const { data } = await clienteAxios(`/v2/booking/citas?page=${pagina}&orden=${filterOrden}&rango_fecha=${filterFecha}&q=${filterSearch}&estado=${filterEstado}&realizada=${filterSituacion}&especialista=${especialista.id || ''}`, config)
             setCitas(data.results)
+            console.log(data.results);
             const { results, ...copiaPaginator } = data;
             handlePaginator(copiaPaginator)
             // console.log(data.data);
@@ -217,9 +224,18 @@ const Citas = () => {
 
     useEffect(() => {
         const obtenerEspecialistas = async () => {
-            const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/especialistas-listado`;
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
             try {
-                const { data } = await axios(url)
+                const { data } = await clienteAxios('/v2/booking/especialistasprofile-listado', config)
                 console.log(data);
                 setEspecialistas(data)
             } catch (error) {
@@ -250,10 +266,18 @@ const Citas = () => {
     const handleSubmitMotivoAnulacion = async e => {
         e.preventDefault()
 
-        // TODO: crear cliente axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/historial-anulaciones`;
         try {
-            const { data } = await axios.post(url, { cita: cita.id, motivo: motivoAnulacion })
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
+            const { data } = await clienteAxios.post('/v2/booking/historial-anulaciones', { cita: cita.id, motivo: motivoAnulacion }, config)
             console.log(data);
             obtenerCitas()
             // setCategorias([...categorias, data])
@@ -286,12 +310,19 @@ const Citas = () => {
             return
         }
 
-
-        // TODO: crear cliente axios
-        const url = `${import.meta.env.VITE_BACKEND_URL}/v2/booking/pagos`;
-
         try {
-            const { data } = await axios.post(url, { cita: cita.id, total: totalPago, cod_especialista: codigoEspecialista, metodo: metodoPago, folio: folio })
+            const token = JSON.parse(localStorage.getItem('token'))
+            if ( !token ) return;
+    
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.access}`
+                }
+            }
+
+            const { data } = await clienteAxios.post('/v2/booking/pagos', { cita: cita.id, total: totalPago, cod_especialista: codigoEspecialista, 
+            metodo: metodoPago, folio: folio }, config)
             console.log(data);
             obtenerCitas()
             // setCategorias([...categorias, data])
@@ -938,16 +969,6 @@ const Citas = () => {
                                         <form className="space-y-4" method="post" >
                                             <div className="flex items-center">
                                                 <input 
-                                                 type="checkbox"
-                                                 name="RL"
-                                                 checked={checkBoxesEstado.RL}
-                                                 onChange={handleCheckBoxChangeEstado}
-                                               className="h-4 w-4 border-gray-300 rounded text-indigo-600 focus:ring-indigo-500" />
-                                                <label className="ml-3 pr-6 text-sm font-medium text-gray-900 whitespace-nowrap"> Realizada </label>
-                                            </div>
-                            
-                                            <div className="flex items-center">
-                                                <input 
                                                     type="checkbox"
                                                     name="AN"
                                                     checked={checkBoxesEstado.AN}
@@ -1064,7 +1085,7 @@ const Citas = () => {
                                          <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.fecha}</td>
                                          <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.hora}</td>
                                          <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.cliente.nombre} {item.cliente.primer_apellido} {item.cliente.segundo_apellido}</td>
-                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.especialista.nombre}</td>
+                                         <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.especialista.nombre_completo}</td>
                                          <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
                                             <span className={`py-0.5 px-1 rounded ${ESTADOS[item.estado].color} text-white text-xs`}>{ESTADOS[item.estado].nombre}</span>
                                          </td>
