@@ -38,10 +38,12 @@ const ReservaLayout = () => {
     cerrarSesionAuth()
   }
 
+
   // para esperar que se llene le state de auth
   if (cargando) return <GlobalSpinner />
 
-  if (!auth.id) return <Navigate to={'/login'} />
+  // if (!auth.id) return <Navigate to={'/login'} />
+  if (Object.values(auth).length === 0) return <Navigate to={'/login'} />
 
   return (
     <>

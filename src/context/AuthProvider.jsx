@@ -33,7 +33,10 @@ export const AuthProvider = ({children}) => {
                 console.log(error.response.data);
                 setAuth({})
                 navigate('/login')
-                // actualizarToken(token.refresh)
+
+                if ( error.response.data.code === 'token_not_valid' ) {
+                    actualizarToken(token.refresh)
+                }
             } 
 
             setCargando(false);
@@ -63,7 +66,8 @@ export const AuthProvider = ({children}) => {
             console.log(error.response.data.detail);
         }
     }
-    // Refrescar toekn cada tantos minutos
+
+    // Refrescar token cada tantos minutos
     useEffect(() => {
         const cuatroMinutos = 1000 * 60 * 4
         const interval = setInterval(() => {
@@ -82,6 +86,7 @@ export const AuthProvider = ({children}) => {
                 setAuth,
                 auth,
                 cargando,
+                setCargando,
                 cerrarSesionAuth
             }}
         >

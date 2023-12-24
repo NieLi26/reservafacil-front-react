@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
@@ -9,12 +8,14 @@ import clienteAxios from '../config/clienteAxios';
 
 const Login = () => {
 
-    const { auth, cargando } = useAuth()
+    const { auth, cargando, setCargando, setAuth } = useAuth()
 
     const navigate = useNavigate()
 
     const [ username, setUsername ] = useState('');
     const [ password, setPassword ] = useState('');
+
+    if ( Object.values(auth).length !== 0 ) return <Navigate to={'/reserva'}/>
 
     const handleSubmit = async e => {
         e.preventDefault()
@@ -24,16 +25,17 @@ const Login = () => {
             return
         }
 
-
+        setCargando(true)
         try {
             const { data } = await clienteAxios.post('/v1/accounts/token/', { username, password })
-            console.log(data);
             localStorage.setItem('token', JSON.stringify(data))
-            // setAuth(data)
+            setAuth(data)
             navigate('/reserva')
         } catch (error) {
             console.log(error.response.data.detail);
             toast.error(error.response.data.detail)
+        } finally {
+            setCargando(false)
         }
     }
 
@@ -79,7 +81,8 @@ const Login = () => {
                 <div className="mt-6">
                     <button 
                         type='submit'
-                        className="w-full px-6 py-3 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-500 rounded-lg hover:bg-blue-400 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-50">
+                        disabled={ cargando && true }
+                        className="disabled:opacity-50 disabled:cursor-not-allowed w-full px-6 py-3 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-500 rounded-lg hover:bg-blue-400 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-50">
                         Iniciar Sesión
                     </button>
 
